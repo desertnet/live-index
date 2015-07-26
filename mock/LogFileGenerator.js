@@ -1,5 +1,6 @@
 import {EventEmitter} from "events"
 import fs from "fs"
+import crypto from "crypto"
 
 export default class LogFileGenerator extends EventEmitter {
   constructor () {
@@ -7,6 +8,7 @@ export default class LogFileGenerator extends EventEmitter {
 
     this._writer = null
     this._numberOfLinesToWrite = 5
+    this._ids = []
   }
 
   createLog (path) {
@@ -23,12 +25,18 @@ export default class LogFileGenerator extends EventEmitter {
 
   _writeUntilFlushed () {
     if (this._numberOfLinesToWrite != 0) {
-      this._writer.write("foo:bar\n")
+      let id = crypto.randomBytes(8).toString("base64").replace(/=/, "")
+      this._ids.push(id)
+      this._writer.write(`${id}:foo:bar\n`)
       this._numberOfLinesToWrite -= 1
       setImmediate(() => this._writeUntilFlushed())
     }
     else {
       this.emit("flushed")
     }
+  }
+
+  get ids () {
+    return this._ids.slice()
   }
 }

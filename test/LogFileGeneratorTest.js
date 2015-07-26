@@ -39,4 +39,18 @@ describe("LogFileGenerator", () => {
       generator.writeLog()
     })
   })
+
+  describe("ids", () => {
+    it("should be an array of all ids written", done => {
+      assert.deepEqual(generator.ids, [])
+
+      generator.on("flushed", () => {
+        assert.strictEqual(generator.ids.length, 5)
+        return done()
+      })
+
+      generator.createLog(logPath)
+      generator.writeLog()
+    })
+  })
 })

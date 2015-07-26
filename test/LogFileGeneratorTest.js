@@ -8,29 +8,26 @@ import LogFileGenerator from "../mock/LogFileGenerator.js"
 tmp.setGracefulCleanup()
 
 describe("LogFileGenerator", () => {
-  let generator, dir
+  let generator, dir, logPath
 
   beforeEach(() => {
     generator = new LogFileGenerator()
     dir = tmp.dirSync({ unsafeCleanup: true }).name
+    logPath = path.join(dir, "foo.log")
   })
 
-  describe("writeLog()", () => {
-    let logPath
-
-    beforeEach(() => {
-      logPath = path.join(dir, "foo.log")
-    })
-
+  describe("createLog", () => {
     it("should create a file at the given path", done => {
       generator.on("created", () => {
         assert(fs.existsSync(logPath))
         return done()
       })
 
-      generator.writeLog(logPath)
+      generator.createLog(logPath)
     })
+  })
 
+  describe("writeLog()", () => {
     it("should write some entries to file", done => {
       generator.on("flushed", () => {
         const fileData = fs.readFileSync(logPath).toString()
@@ -38,7 +35,8 @@ describe("LogFileGenerator", () => {
         return done()
       })
 
-      generator.writeLog(logPath)
+      generator.createLog(logPath)
+      generator.writeLog()
     })
   })
 })

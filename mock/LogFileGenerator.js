@@ -9,13 +9,15 @@ export default class LogFileGenerator extends EventEmitter {
     this._numberOfLinesToWrite = 5
   }
 
-  writeLog (path) {
+  createLog (path) {
     this._writer = fs.createWriteStream(path)
 
     this._writer.on("open", fd => {
       this.emit("created", path)
     })
+  }
 
+  writeLog () {
     setImmediate(() => this._writeUntilFlushed())
   }
 

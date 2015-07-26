@@ -1,0 +1,38 @@
+{
+  "name": "live-index",
+  "version": "1.0.0",
+  "description": "Maintain an index of interesting positions within a file as it is appended to",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers js:babel/register",
+    "preversion": "npm run compile && npm test",
+    "compile": "gulp",
+    "watch": "gulp --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/desertnet/live-index.git"
+  },
+  "keywords": [
+    "tail",
+    "index",
+    "indexer",
+    "log",
+    "watch"
+  ],
+  "author": "Eric McCarthy <eric@limulus.net> (http://www.limulus.net/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/desertnet/live-index/issues"
+  },
+  "homepage": "https://github.com/desertnet/live-index#readme",
+  "devDependencies": {
+    "babel": "^5.8.5",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.1.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-watch": "^4.3.3",
+    "mocha": "^2.2.5",
+    "nomnom": "^1.8.1"
+  }
+}

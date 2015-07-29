@@ -18,7 +18,7 @@ describe("LiveIndex", () => {
     logGenerator.on("created", () => {
       index = new LiveIndex({
         pathToWatch: logPath,
-        identifierPattern: /^[^:]+/
+        recordIdentifier: record => true
       })
       return done()
     })
@@ -26,14 +26,14 @@ describe("LiveIndex", () => {
 
   describe("fileAndPositionForIdentifier()", () => {
     it("should return the correct file and position for the id", done => {
-      index.once("update", id => {
+      index.once("insert", id => {
         assert.strictEqual(id, logGenerator.ids[0])
         const result = index.fileAndPositionForIdentifier(id)
         assert.strictEqual(result.file, logPath)
         assert.strictEqual(result.position, 0)
         return done()
       })
-      setTimeout(() => {console.log("writing"); logGenerator.writeLog()}, 200)
+      logGenerator.writeLog()
     })
   })
 })

@@ -18,7 +18,7 @@ describe("LiveIndex", () => {
     logGenerator.on("created", () => {
       index = new LiveIndex({
         pathToWatch: logPath,
-        recordIdentifier: record => true
+        recordIdentifier: record => { const m = record.toString().match(/[^:]+/); return m ? m[0] : undefined; }
       })
       return done()
     })

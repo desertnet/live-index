@@ -1,7 +1,7 @@
 {
   "name": "live-index",
   "version": "1.0.0",
-  "description": "Maintain an index of interesting positions within a file as it is appended to",
+  "description": "Maintain an index into a log file as it is appended to and rotated",
   "main": "index.js",
   "scripts": {
     "test": "mocha --compilers js:babel/register",

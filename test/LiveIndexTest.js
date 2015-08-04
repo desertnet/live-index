@@ -16,20 +16,22 @@ describe("LiveIndex", () => {
     logPath = path.join(dir, "foo.log")
     logGenerator.createLog(logPath)
     logGenerator.on("created", () => {
-      index = new LiveIndex({
-        pathToWatch: logPath,
-        indexer: (data, addIndex) => {
-          const m = data.toString().match(/[^:]+/);
-          if (m) {
-            addIndex(m[0], 0)
-          }
-        }
-      })
+      index = new LiveIndex({ pathToWatch: logPath })
       return done()
     })
   })
 
   describe("fileAndPositionForIdentifier()", () => {
+    beforeEach(() => {
+      index.addIndexer((data, addIndex) => {
+        const m = data.toString().match(/[^:]+/);
+        if (m) {
+          addIndex(m[0], 0)
+        }
+      })
+      index.watch()
+    })
+
     it("should return the correct file and position for the id", done => {
       index.once("insert", id => {
         assert.strictEqual(id, logGenerator.ids[0])
@@ -52,6 +54,26 @@ describe("LiveIndex", () => {
           }, 40)
         })
       })
+      logGenerator.writeLog()
+    })
+  })
+
+  describe("indexer", () => {
+    it("processedTo callback should cause unprocessed buffer to be appended in next chunk", done => {
+      let callCount = 0
+      index.addIndexer((data, addIndex, processedTo) => {
+        callCount += 1
+        if (callCount === 1) {
+          assert(processedTo)
+          processedTo(7)
+        }
+        else if (callCount === 2) {
+          const expected = logGenerator.lines[0].slice(7) + logGenerator.lines[1]
+          assert.strictEqual(data.toString(), expected)
+          return done()
+        }
+      })
+      index.watch()
       logGenerator.writeLog()
     })
   })

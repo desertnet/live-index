@@ -40,5 +40,19 @@ describe("LiveIndex", () => {
       })
       logGenerator.writeLog()
     })
+
+    it("should update the file name when the underlying file is renamed", done => {
+      logGenerator.on("flushed", () => {
+        const newPath = path.join(dir, "renamed.txt")
+        logGenerator.renameFile(newPath, () => {
+          setTimeout(() => {
+            const result = index.fileAndPositionForIdentifier(logGenerator.ids[0])
+            assert.strictEqual(result.file, newPath)
+            return done()
+          }, 40)
+        })
+      })
+      logGenerator.writeLog()
+    })
   })
 })

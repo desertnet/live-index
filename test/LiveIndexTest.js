@@ -23,7 +23,7 @@ describe("LiveIndex", () => {
 
   describe("fileAndPositionForIdentifier()", () => {
     beforeEach(() => {
-      index.addIndexer((data, addIndex) => {
+      index.setIndexer((data, addIndex) => {
         const m = data.toString().match(/[^:]+/);
         if (m) {
           addIndex(m[0], 0)
@@ -61,7 +61,7 @@ describe("LiveIndex", () => {
   describe("indexer", () => {
     it("processedTo callback should cause unprocessed buffer to be appended in next chunk", done => {
       let callCount = 0
-      index.addIndexer((data, addIndex, processedTo) => {
+      index.setIndexer((data, addIndex, processedTo) => {
         callCount += 1
         if (callCount === 1) {
           assert(processedTo)

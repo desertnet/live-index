@@ -6,8 +6,7 @@
   "scripts": {
     "test": "mocha --compilers js:babel/register",
     "preversion": "npm run compile && npm test",
-    "compile": "gulp",
-    "watch": "gulp --watch"
+    "compile": "babel --source-maps inline --out-dir dist/es5/lib lib"
   },
   "repository": {
     "type": "git",
@@ -28,12 +27,7 @@
   "homepage": "https://github.com/desertnet/live-index#readme",
   "devDependencies": {
     "babel": "^5.8.5",
-    "gulp": "^3.9.0",
-    "gulp-babel": "^5.1.0",
-    "gulp-plumber": "^1.0.1",
-    "gulp-watch": "^4.3.3",
     "mocha": "^2.2.5",
-    "nomnom": "^1.8.1",
     "tmp": "0.0.26"
   },
   "dependencies": {

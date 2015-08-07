@@ -77,4 +77,47 @@ describe("LiveIndex", () => {
       logGenerator.writeLog()
     })
   })
+
+  describe("setIndexStorageObject()", () => {
+    let mockStore
+
+    beforeEach(() => {
+      mockStore = new MockIndexStorage()
+      index = new LiveIndex()
+      index.setIndexStorageObject(mockStore)
+    })
+
+    it("should update the object that is used when calling .insert()", () => {
+      index.insert("foo", "file", 5)
+      mockStore.assertSetCalledWith("foo", {file: undefined, position: 5})
+    })
+
+    it("should update the object that is used when calling fileAndPositionForIdentifier()", () => {
+      index.fileAndPositionForIdentifier("foo")
+      mockStore.assertGetCalledWith("foo")
+    })
+  })
 })
+
+class MockIndexStorage {
+  constructor () {
+    this._getCalledWith = null
+    this._setCalledWith = null
+  }
+
+  get (id) {
+    this._getCalledWith = Array.from(arguments)
+  }
+
+  set (id, val) {
+    this._setCalledWith = Array.from(arguments)
+  }
+
+  assertGetCalledWith () {
+    assert.deepEqual(this._getCalledWith, Array.from(arguments))
+  }
+
+  assertSetCalledWith () {
+    assert.deepEqual(this._setCalledWith, Array.from(arguments))
+  }
+}

@@ -27,6 +27,12 @@ If both `pathToWatch` and `indexer` are defined, then `.watch()` is automaticall
 
 Sets `indexer` as the indexer callback. See the `indexer` callback documentation below for what gets passed to this function.
 
+### Method `setIndexStorageObject(obj)`
+
+Sets the object to be used for in memory storage of index identifiers and file positions. This overrides the default `Map` instance.
+
+The object specified by the `obj` parameter must have standard `.get(id)` and `.set(id, val)` methods. A good object to use here might be an [lru-cache](https://npmjs.com/package/lru-cache) instance.
+
 ### Method `addPathToWatch(path)`
 
 Adds `path` to the list of files to watch once `.watch()` is called.

@@ -41,6 +41,10 @@ Adds `path` to the list of files to watch once `.watch()` is called.
 
 Begin watching the files that have been added to the index.
 
+### Method `addStaticDataFile(path, callback)`
+
+Appends a file given by `path` to the list of data files and indexes it. Calls the callback once indexing is complete.
+
 ### Callback `indexer(chunk, addIndex, processedTo)`
 
 Your `indexer` callback must handle these parameters:

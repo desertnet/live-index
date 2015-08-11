@@ -10,6 +10,15 @@ tmp.setGracefulCleanup()
 describe("LiveIndex", () => {
   let index, logGenerator, dir, logPath
 
+  const simpleIndexer = (data, addIndex) => {
+    let pos = 0
+    data.toString().split(/\n+/).forEach(s => {
+      const m = s.match(/[^:]+/);
+      if (m) { addIndex(m[0], pos) }
+      pos += s.length + 1
+    })
+  }
+
   beforeEach(done => {
     logGenerator = new LogFileGenerator()
     dir = tmp.dirSync({ unsafeCleanup: true }).name
@@ -23,12 +32,7 @@ describe("LiveIndex", () => {
 
   describe("fileAndPositionForIdentifier()", () => {
     beforeEach(() => {
-      index.setIndexer((data, addIndex) => {
-        const m = data.toString().match(/[^:]+/);
-        if (m) {
-          addIndex(m[0], 0)
-        }
-      })
+      index.setIndexer(simpleIndexer)
       index.watch()
     })
 
@@ -95,6 +99,24 @@ describe("LiveIndex", () => {
     it("should update the object that is used when calling fileAndPositionForIdentifier()", () => {
       index.fileAndPositionForIdentifier("foo")
       mockStore.assertGetCalledWith("foo")
+    })
+  })
+
+  describe("addStaticDataFile()", () => {
+    it("should add a file to the index", done => {
+      index.setIndexer(simpleIndexer)
+      index.watch()
+
+      logGenerator.on("flushed", () => {
+        const file = path.resolve(__dirname, "..", "fixtures", "bar.log")
+        index.addStaticDataFile(file, err => {
+          assert.ifError(err)
+          const expected = {file, position: 20}
+          assert.deepEqual(index.fileAndPositionForIdentifier("EtBQPcgqTHA"), expected)
+          return done()
+        })
+      })
+      logGenerator.writeLog()
     })
   })
 })

@@ -31,6 +31,6 @@
     "tmp": "0.0.26"
   },
   "dependencies": {
-    "tail-follow": "^1.2.0"
+    "tail-follow": "^1.3.0"
   }
 }

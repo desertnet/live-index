@@ -45,6 +45,10 @@ Begin watching the files that have been added to the index.
 
 Appends a file given by `path` to the list of data files and indexes it. Calls the callback once indexing is complete.
 
+### Method `readStreamFromIndex(identifier)`
+
+Returns a `Readable` stream starting from the data file and position specified by `identifier`. This stream will automatically span across multiple data files. If the identifier is not in the index `undefined` is returned instead of a stream object.
+
 ### Callback `indexer(chunk, addIndex, processedTo)`
 
 Your `indexer` callback must handle these parameters:

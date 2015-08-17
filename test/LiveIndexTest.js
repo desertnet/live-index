@@ -128,11 +128,7 @@ describe("LiveIndex", () => {
   })
 
   describe("readStreamFromIndex()", () => {
-    it("should return undefined if index does not exist", () => {
-      assert.strictEqual(index.readStreamFromIndex("nonexistent"), undefined)
-    })
-
-    it("should return a Readable stream beginning at the offset specified by the index", done => {
+    beforeEach(done => {
       index.setIndexer(simpleIndexer)
       index.addStaticDataFile(barFixturePath, err => added(err, barFixturePath))
       index.addStaticDataFile(fooFixturePath, err => added(err, fooFixturePath))
@@ -143,14 +139,20 @@ describe("LiveIndex", () => {
 
         seen.push(path)
         if (seen.length !== 2) {
-          return
-        }
-
-        index.readStreamFromIndex("6fVmv625zfs").pipe(concat(result => {
-          assert(result.equals(fooFixtureData.slice(40)))
           return done()
-        }))
+        }
       }
+    })
+
+    it("should return undefined if index does not exist", () => {
+      assert.strictEqual(index.readStreamFromIndex("nonexistent"), undefined)
+    })
+
+    it("should return a Readable stream beginning at the offset specified by the index", done => {
+      index.readStreamFromIndex("6fVmv625zfs").pipe(concat(result => {
+        assert(result.equals(fooFixtureData.slice(40)))
+        return done()
+      }))
     })
   })
 })

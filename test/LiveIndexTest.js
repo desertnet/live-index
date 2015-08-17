@@ -154,6 +154,14 @@ describe("LiveIndex", () => {
         return done()
       }))
     })
+
+    it("should return a Readable stream that spans across files", done => {
+      index.readStreamFromIndex("EtBQPcgqTHA").pipe(concat(result => {
+        const barThenFoo = Buffer.concat([barFixtureData, fooFixtureData])
+        assert(result.equals(barThenFoo.slice(20)))
+        return done()
+      }))
+    })
   })
 })
 

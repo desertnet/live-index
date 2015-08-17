@@ -27,6 +27,7 @@
   "homepage": "https://github.com/desertnet/live-index#readme",
   "devDependencies": {
     "babel": "^5.8.5",
+    "concat-stream": "^1.5.0",
     "mocha": "^2.2.5",
     "tmp": "0.0.26"
   },

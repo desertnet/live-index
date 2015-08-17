@@ -1,11 +1,18 @@
 import assert from "assert"
 import tmp from "tmp"
 import path from "path"
+import fs from "fs"
+import concat from "concat-stream"
 
 import LogFileGenerator from "../mock/LogFileGenerator.js"
 import LiveIndex from "../lib/LiveIndex.js"
 
 tmp.setGracefulCleanup()
+
+const fooFixturePath = path.resolve(__dirname, "..", "fixtures", "foo.txt")
+const fooFixtureData = fs.readFileSync(fooFixturePath)
+const barFixturePath = path.resolve(__dirname, "..", "fixtures", "bar.txt")
+const barFixtureData = fs.readFileSync(barFixturePath)
 
 describe("LiveIndex", () => {
   let index, logGenerator, dir, logPath
@@ -108,15 +115,42 @@ describe("LiveIndex", () => {
       index.watch()
 
       logGenerator.on("flushed", () => {
-        const file = path.resolve(__dirname, "..", "fixtures", "bar.log")
-        index.addStaticDataFile(file, err => {
+
+        index.addStaticDataFile(barFixturePath, err => {
           assert.ifError(err)
-          const expected = {file, position: 20}
+          const expected = {file: barFixturePath, position: 20}
           assert.deepEqual(index.fileAndPositionForIdentifier("EtBQPcgqTHA"), expected)
           return done()
         })
       })
       logGenerator.writeLog()
+    })
+  })
+
+  describe("readStreamFromIndex()", () => {
+    it("should return undefined if index does not exist", () => {
+      assert.strictEqual(index.readStreamFromIndex("nonexistent"), undefined)
+    })
+
+    it("should return a Readable stream beginning at the offset specified by the index", done => {
+      index.setIndexer(simpleIndexer)
+      index.addStaticDataFile(barFixturePath, err => added(err, barFixturePath))
+      index.addStaticDataFile(fooFixturePath, err => added(err, fooFixturePath))
+
+      let seen = []
+      function added (err, path) {
+        assert.ifError(err)
+
+        seen.push(path)
+        if (seen.length !== 2) {
+          return
+        }
+
+        index.readStreamFromIndex("6fVmv625zfs").pipe(concat(result => {
+          assert(result.equals(fooFixtureData.slice(40)))
+          return done()
+        }))
+      }
     })
   })
 })

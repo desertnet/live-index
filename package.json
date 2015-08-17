@@ -6,8 +6,8 @@
   "scripts": {
     "test": "mocha --compilers js:babel/register",
     "preversion": "npm test",
-    "prepublish": "rimraf dist && npm run compile",
-    "compile": "babel --source-maps inline --out-dir dist/es5/lib lib"
+    "prepublish": "npm run compile",
+    "compile": "rimraf dist && babel --source-maps inline --out-dir dist/es5/lib lib"
   },
   "repository": {
     "type": "git",

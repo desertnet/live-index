@@ -1,6 +1,6 @@
 {
   "name": "live-index",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Maintain an index into a log file as it is appended to and rotated",
   "main": "dist/es5/lib/LiveIndex.js",
   "scripts": {

@@ -45,9 +45,9 @@ Begin watching the files that have been added to the index.
 
 Appends a file given by `path` to the list of data files and indexes it. Calls the callback once indexing is complete.
 
-### Method `readStreamFromIndex(identifier)`
+### Method `readStreamBetweenIndexes(startIdentifier, endIdentifier)`
 
-Returns a `Readable` stream starting from the data file and position specified by `identifier`. This stream will automatically span across multiple data files. If the identifier is not in the index `undefined` is returned instead of a stream object.
+Returns a `Readable` stream starting from the data file and position specified by `startIdentifier` and ends at the data file and position specified by `endIdentifier`. This stream will automatically span across multiple data files. If any or both of the identifiers are not in the index, then `undefined` is returned instead of a stream object. If the index for `endIdentifier` comes before `startIdentifier`, an error is thrown.
 
 ### Callback `indexer(chunk, addIndex, processedTo)`
 

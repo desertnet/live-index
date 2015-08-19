@@ -127,13 +127,13 @@ describe("LiveIndex", () => {
     })
   })
 
-  describe("readStreamFromIndex()", () => {
+  describe("readStreamBetweenIndexes()", () => {
     beforeEach(done => {
       index.setIndexer(simpleIndexer)
       index.addStaticDataFile(barFixturePath, err => added(err, barFixturePath))
       index.addStaticDataFile(fooFixturePath, err => added(err, fooFixturePath))
 
-      let seen = []
+      const seen = []
       function added (err, path) {
         assert.ifError(err)
 
@@ -145,22 +145,32 @@ describe("LiveIndex", () => {
     })
 
     it("should return undefined if index does not exist", () => {
-      assert.strictEqual(index.readStreamFromIndex("nonexistent"), undefined)
+      assert.strictEqual(index.readStreamBetweenIndexes("6fVmv625zfs", "nonexistent"), undefined)
+      assert.strictEqual(index.readStreamBetweenIndexes("nonexistent", "6fVmv625zfs"), undefined)
+      assert.strictEqual(index.readStreamBetweenIndexes("nonexistent", "nonexistent"), undefined)
     })
 
     it("should return a Readable stream beginning at the offset specified by the index", done => {
-      index.readStreamFromIndex("6fVmv625zfs").pipe(concat(result => {
-        assert(result.equals(fooFixtureData.slice(40)))
+      index.readStreamBetweenIndexes("6fVmv625zfs", "cLlQfumYGlQ").pipe(concat(result => {
+        assert.strictEqual(result.toString(), fooFixtureData.slice(40, 80).toString())
         return done()
       }))
     })
 
     it("should return a Readable stream that spans across files", done => {
-      index.readStreamFromIndex("EtBQPcgqTHA").pipe(concat(result => {
+      index.readStreamBetweenIndexes("EtBQPcgqTHA", "6fVmv625zfs").pipe(concat(result => {
         const barThenFoo = Buffer.concat([barFixtureData, fooFixtureData])
-        assert(result.equals(barThenFoo.slice(20)))
+        assert.strictEqual(result.toString(), barThenFoo.slice(20, 140).toString())
         return done()
       }))
+    })
+
+    it("should emit an error when startId comes after endId in different files", () => {
+      assert.throws(() => index.readStreamBetweenIndexes("6fVmv625zfs", "EtBQPcgqTHA"))
+    })
+
+    it("should emit an error when startId comes after endId in same file", () => {
+      assert.throws(() => index.readStreamBetweenIndexes("cLlQfumYGlQ", "6fVmv625zfs"))
     })
   })
 })

@@ -33,9 +33,9 @@ Sets the object to be used for in memory storage of index identifiers and file p
 
 The object specified by the `obj` parameter must have standard `.get(id)` and `.set(id, val)` methods. A good object to use here might be an [lru-cache](https://npmjs.com/package/lru-cache) instance.
 
-### Method `addPathToWatch(path)`
+### Method `setPathToWatch(path)`
 
-Adds `path` to the list of files to watch once `.watch()` is called.
+Set the `path` of the file to watch once `.watch()` is called.
 
 ### Method `watch()`
 

@@ -68,6 +68,29 @@ describe("LiveIndex", () => {
       })
       logGenerator.writeLog()
     })
+
+    it("should resolve link entries", () => {
+      index.addStaticDataFile(fooFixturePath)
+      index.insert("foo", fooFixturePath, 9)
+      index.insertLink("bar", "foo")
+      const result = index.fileAndPositionForIdentifier("bar")
+      const expected = index.fileAndPositionForIdentifier("bar")
+      assert.deepEqual(expected, {file: fooFixturePath, position: 9})
+      assert.deepEqual(result, expected)
+    })
+  })
+
+  describe("insertLink", () => {
+    it("should throw an error when inserting a circular link", () => {
+      index.addStaticDataFile(fooFixturePath)
+      assert.throws(() => index.insertLink("foo", "foo"))
+
+      index.insertLink("foo", "bar")
+      assert.throws(() => index.insertLink("bar", "foo"))
+
+      index.insertLink("bar", "baz")
+      assert.throws(() => index.insertLink("baz", "foo"))
+    })
   })
 
   describe("indexer", () => {
@@ -101,6 +124,24 @@ describe("LiveIndex", () => {
           assert.strictEqual(insertSpy.callCount, 5)
           logGenerator.ids.forEach((id, i) => {
             assert(insertSpy.calledWithExactly(id, logPath, i*20))
+          })
+          return done()
+        })
+      })
+
+      it("should call .insertLink() to add links", done => {
+        const insertLinkSpy = sinon.spy(index, "insertLink")
+        index.setIndexer((chunk, addIndex, processedTo) => {
+          simpleIndexer(chunk, addIndex, processedTo)
+          const lastId = logGenerator.ids.pop()
+          addIndex(`link-${lastId}`, lastId)
+        })
+        index.watch()
+        logGenerator.writeLog()
+        logGenerator.on("flushed", () => {
+          assert.strictEqual(insertLinkSpy.callCount, 5)
+          logGenerator.ids.forEach((id, i) => {
+            assert(insertLinkSpy.calledWithExactly(`link-${id}`, id))
           })
           return done()
         })

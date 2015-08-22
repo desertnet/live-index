@@ -70,22 +70,24 @@ describe("LiveIndex", () => {
   })
 
   describe("indexer", () => {
-    it("processedTo callback should cause unprocessed buffer to be appended in next chunk", done => {
-      let callCount = 0
-      index.setIndexer((data, addIndex, processedTo) => {
-        callCount += 1
-        if (callCount === 1) {
-          assert(processedTo)
-          processedTo(7)
-        }
-        else if (callCount === 2) {
-          const expected = logGenerator.lines[0].slice(7) + logGenerator.lines[1]
-          assert.strictEqual(data.toString(), expected)
-          return done()
-        }
+    describe("processedTo callback", () => {
+      it("should cause unprocessed buffer to be appended in next chunk", done => {
+        let callCount = 0
+        index.setIndexer((data, addIndex, processedTo) => {
+          callCount += 1
+          if (callCount === 1) {
+            assert(processedTo)
+            processedTo(7)
+          }
+          else if (callCount === 2) {
+            const expected = logGenerator.lines[0].slice(7) + logGenerator.lines[1]
+            assert.strictEqual(data.toString(), expected)
+            return done()
+          }
+        })
+        index.watch()
+        logGenerator.writeLog()
       })
-      index.watch()
-      logGenerator.writeLog()
     })
   })
 

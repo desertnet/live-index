@@ -3,6 +3,7 @@ import tmp from "tmp"
 import path from "path"
 import fs from "fs"
 import concat from "concat-stream"
+import sinon from "sinon"
 
 import LogFileGenerator from "../mock/LogFileGenerator.js"
 import LiveIndex from "../lib/LiveIndex.js"
@@ -87,6 +88,22 @@ describe("LiveIndex", () => {
         })
         index.watch()
         logGenerator.writeLog()
+      })
+    })
+
+    describe("addIndex callback", () => {
+      it("should call .insert() to add indexes", done => {
+        const insertSpy = sinon.spy(index, "insert")
+        index.setIndexer(simpleIndexer)
+        index.watch()
+        logGenerator.writeLog()
+        logGenerator.on("flushed", () => {
+          assert.strictEqual(insertSpy.callCount, 5)
+          logGenerator.ids.forEach((id, i) => {
+            assert(insertSpy.calledWithExactly(id, logPath, i*20))
+          })
+          return done()
+        })
       })
     })
   })

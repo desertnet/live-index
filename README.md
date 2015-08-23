@@ -21,6 +21,7 @@ Instantiates a `LiveIndex` instance. The `options` object takes the following pr
   - `pathToWatch`: The path to a log file you want to watch and index.
   - `indexer`: A function you define to update the index. See the `indexer` delegagte documentation below for what gets passed to this function.
   - `tailChunkSize`: Set the size in bytes that should be read at a time from the data files. You can use this to control the maximum size of the chunks dispatched to your indexer function.
+  - `rotationPollInterval`: Poll for data file rotation every specified number of milliseconds, instead of relying on `fs.watch()` rename events. Try this if indexing stops after a rotation.
 
 If both `pathToWatch` and `indexer` are defined, then `.watch()` is automatically called for you.
 

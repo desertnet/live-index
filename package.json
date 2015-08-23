@@ -31,12 +31,12 @@
     "concat-stream": "^1.5.0",
     "mocha": "^2.2.5",
     "rimraf": "^2.4.2",
+    "sinon": "^1.16.1",
     "tmp": "0.0.26"
   },
   "dependencies": {
     "cat-tail": "^1.1.0",
     "lodash.isstring": "^3.0.1",
-    "sinon": "^1.16.1",
     "tail-follow": "^1.4.0"
   }
 }

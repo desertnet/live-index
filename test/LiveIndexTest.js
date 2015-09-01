@@ -34,6 +34,7 @@ describe("LiveIndex", () => {
     logGenerator.createLog(logPath)
     logGenerator.on("created", () => {
       index = new LiveIndex({ pathToWatch: logPath })
+      index.setIndexStorageObject(new AsyncIndexStorage())
       return done()
     })
   })
@@ -45,14 +46,15 @@ describe("LiveIndex", () => {
     })
 
     it("should return the correct file and position for the id", done => {
+      logGenerator.writeLog()
       index.once("insert", id => {
         assert.strictEqual(id, logGenerator.ids[0])
-        const result = index.fileAndPositionForIdentifier(id)
-        assert.strictEqual(result.file, logPath)
-        assert.strictEqual(result.position, 0)
-        return done()
+        index.fileAndPositionForIdentifier(id).then(result => {
+          assert.strictEqual(result.file, logPath)
+          assert.strictEqual(result.position, 0)
+          return done()
+        })
       })
-      logGenerator.writeLog()
     })
 
     it("should update the file name when the underlying file is renamed", done => {
@@ -60,49 +62,48 @@ describe("LiveIndex", () => {
         const newPath = path.join(dir, "renamed.txt")
         logGenerator.renameFile(newPath, () => {
           setTimeout(() => {
-            const result = index.fileAndPositionForIdentifier(logGenerator.ids[0])
-            assert.strictEqual(result.file, newPath)
-            return done()
+            index.fileAndPositionForIdentifier(logGenerator.ids[0]).then(result => {
+              assert.strictEqual(result.file, newPath)
+              return done()
+            })
           }, 40)
         })
       })
       logGenerator.writeLog()
     })
 
-    it("should resolve link entries", () => {
+    it("should resolve link entries", done => {
       index.addStaticDataFile(fooFixturePath)
-      index.insert("foo", fooFixturePath, 9)
-      index.insertLink("bar", "foo")
-      const result = index.fileAndPositionForIdentifier("bar")
-      const expected = index.fileAndPositionForIdentifier("foo")
-      assert.deepEqual(expected, {file: fooFixturePath, position: 9})
-      assert.deepEqual(result, expected)
-    })
-
-    describe("when using async storage", () => {
-      it("should return a promise that resolves to the index entry", done => {
-        index.setIndexStorageObject(new AsyncIndexStorage())
-        index.addStaticDataFile(fooFixturePath)
-        index.insert("foo", fooFixturePath, 9)
+      Promise.all([
+        index.insert("foo", fooFixturePath, 9),
         index.insertLink("bar", "foo")
-        index.fileAndPositionForIdentifier("bar").then(result => {
-          assert.deepEqual(result, {file: fooFixturePath, position: 9})
-          return done()
-        })
+      ]).then(() => {
+        return index.fileAndPositionForIdentifier("bar")
+      }).then(result => {
+        assert.deepEqual(result, {file: fooFixturePath, position: 9})
+        return done()
       })
     })
   })
 
   describe("insertLink", () => {
-    it("should throw an error when inserting a circular link", () => {
+    it("should emit an error when inserting a circular link", done => {
       index.addStaticDataFile(fooFixturePath)
-      assert.throws(() => index.insertLink("foo", "foo"))
-
-      index.insertLink("foo", "bar")
-      assert.throws(() => index.insertLink("bar", "foo"))
-
-      index.insertLink("bar", "baz")
-      assert.throws(() => index.insertLink("baz", "foo"))
+      assert.doesNotThrow(() => index.insertLink("foo", "foo"))
+      index.once("error", err => {
+        assert(err)
+        index.insertLink("foo", "bar")
+        assert.doesNotThrow(() => index.insertLink("bar", "foo"))
+        index.once("error", err => {
+          assert(err)
+          index.insertLink("bar", "baz")
+          assert.doesNotThrow(() => index.insertLink("baz", "foo"))
+          index.once("error", err => {
+            assert(err)
+            return done()
+          })
+        })
+      })
     })
   })
 
@@ -186,22 +187,23 @@ describe("LiveIndex", () => {
     it("should add a file to the index", done => {
       index.setIndexer(simpleIndexer)
       index.watch()
+      logGenerator.writeLog()
 
-      logGenerator.on("flushed", () => {
-
+      logGenerator.once("flushed", () => {
         index.addStaticDataFile(barFixturePath, err => {
           assert.ifError(err)
           const expected = {file: barFixturePath, position: 20}
-          assert.deepEqual(index.fileAndPositionForIdentifier("EtBQPcgqTHA"), expected)
-          return done()
+          index.fileAndPositionForIdentifier("EtBQPcgqTHA").then(result => {
+            assert.deepEqual(result, expected)
+            return done()
+          })
         })
       })
-      logGenerator.writeLog()
     })
   })
 
   describe("readStreamBetweenIndexes()", () => {
-    function setUpReadStreamBetweenIndexesTest (done) {
+    beforeEach(done => {
       index.setIndexer(simpleIndexer)
       index.addStaticDataFile(barFixturePath, err => added(err, barFixturePath))
       index.addStaticDataFile(fooFixturePath, err => added(err, fooFixturePath))
@@ -215,69 +217,50 @@ describe("LiveIndex", () => {
           return done()
         }
       }
-    }
+    })
 
-    describe("when using synchronous built in storage", () => {
-      beforeEach(done => {
-        setUpReadStreamBetweenIndexesTest(done)
+    it("should return undefined if index does not exist", () => {
+      return Promise.all([
+        index.readStreamBetweenIndexes("nonexistent", "6fVmv625zfs"),
+        index.readStreamBetweenIndexes("6fVmv625zfs", "nonexistent"),
+        index.readStreamBetweenIndexes("nonexistent", "nonexistent")
+      ]).then(([firstNonExistent, secondNonExistent, bothNonExistent]) => {
+        assert.strictEqual(firstNonExistent, undefined)
+        assert.strictEqual(secondNonExistent, undefined)
+        assert.strictEqual(bothNonExistent, undefined)
       })
+    })
 
-      it("should return undefined if index does not exist", () => {
-        assert.strictEqual(index.readStreamBetweenIndexes("6fVmv625zfs", "nonexistent"), undefined)
-        assert.strictEqual(index.readStreamBetweenIndexes("nonexistent", "6fVmv625zfs"), undefined)
-        assert.strictEqual(index.readStreamBetweenIndexes("nonexistent", "nonexistent"), undefined)
-      })
-
-      it("should return a Readable stream beginning at the offset specified by the index", done => {
-        index.readStreamBetweenIndexes("6fVmv625zfs", "cLlQfumYGlQ").pipe(concat(result => {
+    it("should return a Readable stream beginning at the offset specified by the index", done => {
+      index.readStreamBetweenIndexes("6fVmv625zfs", "cLlQfumYGlQ").then(stream => {
+        stream.pipe(concat(result => {
           assert.strictEqual(result.toString(), fooFixtureData.slice(40, 80).toString())
           return done()
         }))
       })
+    })
 
-      it("should return a Readable stream that spans across files", done => {
-        index.readStreamBetweenIndexes("EtBQPcgqTHA", "6fVmv625zfs").pipe(concat(result => {
+    it("should return a Readable stream that spans across files", done => {
+      index.readStreamBetweenIndexes("EtBQPcgqTHA", "6fVmv625zfs").then(stream => {
+        stream.pipe(concat(result => {
           const barThenFoo = Buffer.concat([barFixtureData, fooFixtureData])
           assert.strictEqual(result.toString(), barThenFoo.slice(20, 140).toString())
           return done()
         }))
       })
+    })
 
-      it("should emit an error when startId comes after endId in different files", () => {
-        assert.throws(() => index.readStreamBetweenIndexes("6fVmv625zfs", "EtBQPcgqTHA"))
-      })
-
-      it("should emit an error when startId comes after endId in same file", () => {
-        assert.throws(() => index.readStreamBetweenIndexes("cLlQfumYGlQ", "6fVmv625zfs"))
+    it("should emit an error when startId comes after endId in different files", done => {
+      index.readStreamBetweenIndexes("6fVmv625zfs", "EtBQPcgqTHA").catch(err => {
+        assert(err)
+        return done()
       })
     })
 
-    describe("when using async storage", () => {
-      beforeEach(done => {
-        index.setIndexStorageObject(new AsyncIndexStorage())
-        setUpReadStreamBetweenIndexesTest(done)
-      })
-
-      it("should return a promise that resolves to undefined if index does not exist", () => {
-        return Promise.all([
-          index.readStreamBetweenIndexes("nonexistent", "6fVmv625zfs"),
-          index.readStreamBetweenIndexes("6fVmv625zfs", "nonexistent"),
-          index.readStreamBetweenIndexes("nonexistent", "nonexistent")
-        ]).then(([firstNonExistent, secondNonExistent, bothNonExistent]) => {
-          assert.strictEqual(firstNonExistent, undefined)
-          assert.strictEqual(secondNonExistent, undefined)
-          assert.strictEqual(bothNonExistent, undefined)
-        })
-      })
-
-      it("should return a promise that resolves to a Readable stream that spans across files", done => {
-        index.readStreamBetweenIndexes("EtBQPcgqTHA", "6fVmv625zfs").then(stream => {
-          stream.pipe(concat(result => {
-            const barThenFoo = Buffer.concat([barFixtureData, fooFixtureData])
-            assert.strictEqual(result.toString(), barThenFoo.slice(20, 140).toString())
-            return done()
-          }))
-        })
+    it("should emit an error when startId comes after endId in same file", () => {
+      index.readStreamBetweenIndexes("cLlQfumYGlQ", "6fVmv625zfs").catch(err => {
+        assert(err)
+        return done()
       })
     })
   })

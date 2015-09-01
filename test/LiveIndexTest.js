@@ -264,6 +264,28 @@ describe("LiveIndex", () => {
       })
     })
   })
+
+  describe("insert()", () => {
+    it("should emit an error when insertion fails", done => {
+      index.setIndexStorageObject(new ExplodingStorage())
+      index.insert("foo", "foo.log", 0)
+      index.once("error", err => {
+        assert(err)
+        return done()
+      })
+    })
+  })
+
+  describe("insertLink()", () => {
+    it("should emit an error when link insertion fails", done => {
+      index.setIndexStorageObject(new ExplodingStorage())
+      index.insertLink("foo", "bar")
+      index.once("error", err => {
+        assert(err)
+        return done()
+      })
+    })
+  })
 })
 
 class MockIndexStorage {
@@ -293,5 +315,15 @@ class MockIndexStorage {
 
   assertSetCalledWith () {
     assert.deepEqual(this._setCalledWith, Array.from(arguments))
+  }
+}
+
+class ExplodingStorage {
+  get (id) {
+    return Promise.reject(new Error("Failed to read A:\\MYDB.DAT"))
+  }
+
+  set (id, val) {
+    return Promise.reject(new Error("Can't open A:\\MYDB.DAT"))
   }
 }

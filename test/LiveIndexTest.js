@@ -34,7 +34,6 @@ describe("LiveIndex", () => {
     logGenerator.createLog(logPath)
     logGenerator.on("created", () => {
       index = new LiveIndex({ pathToWatch: logPath })
-      index.setIndexStorageObject(new AsyncIndexStorage())
       return done()
     })
   })
@@ -276,12 +275,16 @@ class MockIndexStorage {
 
   get (id) {
     this._getCalledWith = Array.from(arguments)
-    return this._map[id]
+    return new Promise(resolve => {
+      process.nextTick(() => resolve(this._map[id]))
+    })
   }
 
   set (id, val) {
     this._setCalledWith = Array.from(arguments)
-    this._map[id] = val
+    return new Promise(resolve => {
+      process.nextTick(() => resolve(this._map[id] = val))
+    })
   }
 
   assertGetCalledWith () {
@@ -290,19 +293,5 @@ class MockIndexStorage {
 
   assertSetCalledWith () {
     assert.deepEqual(this._setCalledWith, Array.from(arguments))
-  }
-}
-
-class AsyncIndexStorage extends MockIndexStorage {
-  get (id) {
-    return new Promise(resolve => {
-      process.nextTick(() => resolve(super.get(id)))
-    })
-  }
-
-  set (id, val) {
-    return new Promise(resolve => {
-      process.nextTick(() => resolve(super.set(id, val)))
-    })
   }
 }

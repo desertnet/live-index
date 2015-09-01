@@ -84,26 +84,27 @@ describe("LiveIndex", () => {
         return done()
       })
     })
-  })
 
-  describe("insertLink", () => {
-    it("should emit an error when inserting a circular link", done => {
+    it("should reject when traversing a self referential link", done => {
       index.addStaticDataFile(fooFixturePath)
-      assert.doesNotThrow(() => index.insertLink("foo", "foo"))
-      index.once("error", err => {
-        assert(err)
-        index.insertLink("foo", "bar")
-        assert.doesNotThrow(() => index.insertLink("bar", "foo"))
-        index.once("error", err => {
+      index.insertLink("foo", "foo")
+        .then(() => index.fileAndPositionForIdentifier("foo"))
+        .then(() => assert.fail(), err => {
           assert(err)
-          index.insertLink("bar", "baz")
-          assert.doesNotThrow(() => index.insertLink("baz", "foo"))
-          index.once("error", err => {
-            assert(err)
-            return done()
-          })
+          return done()
         })
-      })
+    })
+
+    it("should reject when traversing a circular link", done => {
+      index.addStaticDataFile(fooFixturePath)
+      Promise.all([
+        index.insertLink("foo", "bar"),
+        index.insertLink("bar", "foo"),
+      ]).then(() => index.fileAndPositionForIdentifier("foo"))
+        .then(() => assert.fail(), err => {
+          assert(err)
+          return done()
+        })
     })
   })
 

@@ -105,6 +105,14 @@ describe("LiveIndex", () => {
           return done()
         })
     })
+
+    it("should reject when storage fails with an error", done => {
+      index.setIndexStorageObject(new ExplodingStorage())
+      index.fileAndPositionForIdentifier("foo").catch(err => {
+        assert(err)
+        return done()
+      })
+    })
   })
 
   describe("indexer", () => {

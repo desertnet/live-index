@@ -211,20 +211,12 @@ describe("LiveIndex", () => {
   })
 
   describe("readStreamBetweenIndexes()", () => {
-    beforeEach(done => {
+    beforeEach(() => {
       index.setIndexer(simpleIndexer)
-      index.addStaticDataFile(barFixturePath, err => added(err, barFixturePath))
-      index.addStaticDataFile(fooFixturePath, err => added(err, fooFixturePath))
-
-      const seen = []
-      function added (err, path) {
-        assert.ifError(err)
-
-        seen.push(path)
-        if (seen.length !== 2) {
-          return done()
-        }
-      }
+      return Promise.all([
+        index.addStaticDataFile(barFixturePath),
+        index.addStaticDataFile(fooFixturePath)
+      ])
     })
 
     it("should return undefined if index does not exist", () => {

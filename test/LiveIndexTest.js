@@ -258,15 +258,23 @@ describe("LiveIndex", () => {
       })
     })
 
-    it("should emit an error when startId comes after endId in different files", done => {
+    it("should reject when startId comes after endId in different files", done => {
       index.readStreamBetweenIndexes("6fVmv625zfs", "EtBQPcgqTHA").catch(err => {
         assert(err)
         return done()
       })
     })
 
-    it("should emit an error when startId comes after endId in same file", () => {
+    it("should reject when startId comes after endId in same file", done => {
       index.readStreamBetweenIndexes("cLlQfumYGlQ", "6fVmv625zfs").catch(err => {
+        assert(err)
+        return done()
+      })
+    })
+
+    it("should reject when storage returns an error", done => {
+      index.setIndexStorageObject(new ExplodingStorage())
+      index.readStreamBetweenIndexes("EtBQPcgqTHA", "6fVmv625zfs").catch(err => {
         assert(err)
         return done()
       })

@@ -35,6 +35,7 @@
     "tmp": "0.0.26"
   },
   "dependencies": {
+    "call-me-maybe": "^1.0.1",
     "cat-tail": "^1.1.0",
     "denodeify": "^1.2.1",
     "lodash.isstring": "^3.0.1",

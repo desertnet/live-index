@@ -33,7 +33,7 @@ Sets `indexer` as the indexer delegate. See the `indexer` delegate documentation
 
 Sets the object to be used for in memory storage of index identifiers and file positions. This overrides the default `Map` instance.
 
-The object specified by the `obj` parameter must have standard `.get(id)` and `.set(id, val)` methods. A good object to use here might be an [lru-cache](https://npmjs.com/package/lru-cache) instance.
+The object specified by the `obj` parameter must have `.get(id, [callback])` and `.set(id, val, [callback])` methods. They may optionally be asynchronous; in which case they must either call `callback` in the standard error-first manner, or return a promise.
 
 ### Method `setPathToWatch(path)`
 
@@ -43,13 +43,15 @@ Set the `path` of the file to watch once `.watch()` is called.
 
 Begin watching the files that have been added to the index.
 
-### Method `addStaticDataFile(path, callback)`
+### Method `addStaticDataFile(path, [callback])`
 
-Appends a file given by `path` to the list of data files and indexes it. Calls the callback once indexing is complete.
+Appends a file given by `path` to the list of data files and indexes it. Calls the callback once indexing is complete. If `callback` is not specified a promise is returned instead.
 
-### Method `readStreamBetweenIndexes(startIdentifier, endIdentifier)`
+### Method `readStreamBetweenIndexes(startIdentifier, endIdentifier, [callback])`
 
-Returns a `Readable` stream starting from the data file and position specified by `startIdentifier` and ends at the data file and position specified by `endIdentifier`. This stream will automatically span across multiple data files. If any or both of the identifiers are not in the index, then `undefined` is returned instead of a stream object. If the index for `endIdentifier` comes before `startIdentifier`, an error is thrown.
+Asynchronously returns a `Readable` stream starting from the data file and position specified by `startIdentifier` and ends at the data file and position specified by `endIdentifier`. This stream will automatically span across multiple data files. If any or both of the identifiers are not in the index, then `undefined` is returned instead of a stream object. If the index for `endIdentifier` comes before `startIdentifier`, an error is thrown.
+
+The `callback` parameter is standard error-first. If it is omitted, a promise that resolves to the stream returned instead.
 
 ### Delegate `indexer(chunk, addIndex, processedTo)`
 

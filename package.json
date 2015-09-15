@@ -33,7 +33,7 @@
     "mocha": "^2.2.5",
     "rimraf": "^2.4.2",
     "sinon": "^1.16.1",
-    "tmp": "0.0.26"
+    "tmp": "0.0.27"
   },
   "dependencies": {
     "call-me-maybe": "^1.0.1",

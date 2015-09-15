@@ -3,6 +3,7 @@
   "version": "2.3.2",
   "description": "Maintain an index into a log file as it is appended to and rotated",
   "main": "dist/es5/lib/LiveIndex.js",
+  "engines": { "node": ">0.12" },
   "scripts": {
     "test": "mocha --compilers js:babel/register",
     "preversion": "npm test",
@@ -32,11 +33,14 @@
     "mocha": "^2.2.5",
     "rimraf": "^2.4.2",
     "sinon": "^1.16.1",
-    "tmp": "0.0.26"
+    "tmp": "0.0.27"
   },
   "dependencies": {
+    "call-me-maybe": "^1.0.1",
     "cat-tail": "^1.1.0",
+    "denodeify": "^1.2.1",
     "lodash.isstring": "^3.0.1",
-    "tail-follow": "^1.4.0"
+    "tail-follow": "^1.5.0",
+    "uuid": "^2.0.1"
   }
 }

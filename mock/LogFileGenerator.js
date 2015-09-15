@@ -53,6 +53,10 @@ export default class LogFileGenerator extends EventEmitter {
     return this.lines.join("")
   }
 
+  get path () {
+    return this._currentPath
+  }
+
   generateLogLine () {
     const id = LogFileGenerator.generateId()
     const line = LogFileGenerator.generateLogLineWithId(id)

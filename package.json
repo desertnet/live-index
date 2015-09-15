@@ -39,6 +39,7 @@
     "cat-tail": "^1.1.0",
     "denodeify": "^1.2.1",
     "lodash.isstring": "^3.0.1",
-    "tail-follow": "^1.4.0"
+    "tail-follow": "^1.5.0",
+    "uuid": "^2.0.1"
   }
 }

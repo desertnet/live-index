@@ -34,17 +34,15 @@ describe("LiveIndex", () => {
     logPath = path.join(dir, "foo.log")
     logGenerator.createLog(logPath)
     logGenerator.on("created", () => {
-      index = new LiveIndex({ pathToWatch: logPath })
+      index = new LiveIndex({
+        pathToWatch: logPath,
+        indexer: simpleIndexer
+      })
       return done()
     })
   })
 
   describe("fileAndPositionForIdentifier()", () => {
-    beforeEach(() => {
-      index.setIndexer(simpleIndexer)
-      index.watch()
-    })
-
     it("should return the correct file and position for the id", done => {
       logGenerator.writeLog()
       index.once("insert", id => {
@@ -72,18 +70,17 @@ describe("LiveIndex", () => {
       logGenerator.writeLog()
     })
 
-    it("should resolve link entries", done => {
+    it("should resolve link entries", () =>
       index.addStaticDataFile(fooFixturePath)
-      Promise.all([
-        index.insert("foo", fooFixturePath, 9),
-        index.insertLink("bar", "foo")
-      ]).then(() => {
-        return index.fileAndPositionForIdentifier("bar")
-      }).then(result => {
-        assert.deepEqual(result, {file: fooFixturePath, position: 9})
-        return done()
-      })
-    })
+        .then(() => Promise.all([
+          index.insert("foo", fooFixturePath, 9),
+          index.insertLink("bar", "foo")
+        ]))
+        .then(() => index.fileAndPositionForIdentifier("bar"))
+        .then(result => {
+          assert.deepEqual(result, {file: fooFixturePath, position: 9})
+        })
+    )
 
     it("should reject when traversing a self referential link", done => {
       index.addStaticDataFile(fooFixturePath)
@@ -132,7 +129,6 @@ describe("LiveIndex", () => {
             return done()
           }
         })
-        index.watch()
         logGenerator.writeLog()
       })
     })
@@ -140,8 +136,6 @@ describe("LiveIndex", () => {
     describe("addIndex callback", () => {
       it("should call .insert() to add indexes", done => {
         const insertSpy = sinon.spy(index, "insert")
-        index.setIndexer(simpleIndexer)
-        index.watch()
         logGenerator.writeLog()
         logGenerator.on("flushed", () => {
           assert.strictEqual(insertSpy.callCount, 5)
@@ -159,7 +153,6 @@ describe("LiveIndex", () => {
           const lastId = logGenerator.ids.pop()
           addIndex(`link-${lastId}`, lastId)
         })
-        index.watch()
         logGenerator.writeLog()
         logGenerator.on("flushed", () => {
           assert.strictEqual(insertLinkSpy.callCount, 5)
@@ -177,14 +170,16 @@ describe("LiveIndex", () => {
 
     beforeEach(() => {
       mockStore = new MockIndexStorage()
-      index = new LiveIndex()
       index.setIndexStorageObject(mockStore)
     })
 
-    it("should update the object that is used when calling .insert()", () => {
-      index.insert("foo", "file", 5)
-      mockStore.assertSetCalledWith("foo", {file: undefined, position: 5})
-    })
+    it("should update the object that is used when calling .insert()", () =>
+      index._fileList.identifierForPath(logGenerator.path).then(fileId =>
+        index.insert("foo", logGenerator.path, 5).then(() => {
+          mockStore.assertSetCalledWith("foo", {fileId, position: 5})
+        })
+      )
+    )
 
     it("should update the object that is used when calling fileAndPositionForIdentifier()", () => {
       index.fileAndPositionForIdentifier("foo")
@@ -194,8 +189,6 @@ describe("LiveIndex", () => {
 
   describe("addStaticDataFile()", () => {
     it("should add a file to the index", done => {
-      index.setIndexer(simpleIndexer)
-      index.watch()
       logGenerator.writeLog()
 
       logGenerator.once("flushed", () => {

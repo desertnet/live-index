@@ -4,7 +4,7 @@
   "description": "Maintain an index into a log file as it is appended to and rotated",
   "main": "dist/es5/lib/LiveIndex.js",
   "engines": {
-    "node": ">0.12"
+    "node": ">=0.12"
   },
   "scripts": {
     "test": "mocha --compilers js:babel/register",
